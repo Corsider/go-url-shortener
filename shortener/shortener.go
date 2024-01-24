@@ -38,8 +38,10 @@ func New(storage storage.UrlStorage, env *cfg.Env) *LinkShortener {
 }
 
 func (s *LinkShortener) CreateShortLink(ctx context.Context, request *shortenerproto.CreateShortLinkRequest) (*shortenerproto.CreateShortLinkResponse, error) {
+	// Check if this url is already in storage
 	found, id := s.storage.CheckExistence(request.Original)
 	if found {
+		// sending exactly the same generated link
 		return &shortenerproto.CreateShortLinkResponse{Short: GenerateShortLink(id, s.env.FillingChar, First(strconv.Atoi(s.env.ShortLen)), s.env.URLDomain, s.dict)}, nil
 	}
 	// check if it is url or not
@@ -49,7 +51,9 @@ func (s *LinkShortener) CreateShortLink(ctx context.Context, request *shortenerp
 			return &shortenerproto.CreateShortLinkResponse{Short: "NOT A URL"}, status.Errorf(codes.InvalidArgument, "NOT A URL")
 		}
 	}
+	// generating short link
 	short := GenerateShortLink(First(s.storage.GetLastId()), s.env.FillingChar, First(strconv.Atoi(s.env.ShortLen)), s.env.URLDomain, s.dict)
+	// saving short link to the storage
 	err := s.storage.Save(request.Original, First(s.storage.GetLastId()))
 	if err != nil {
 		log.Println(err)
@@ -86,11 +90,13 @@ func UrlChecker(short string, env *cfg.Env, dictMap *map[rune]bool) bool {
 }
 
 func (s *LinkShortener) GetOriginalLink(ctx context.Context, request *shortenerproto.GetOriginalLinkRequest) (*shortenerproto.GetOriginalLinkResponse, error) {
-	// Check short url length
+	// Check url
 	if !UrlChecker(request.Short, s.env, s.dictMap) {
 		return &shortenerproto.GetOriginalLinkResponse{Original: "INVALID FORMAT"}, status.Errorf(codes.InvalidArgument, "INVALID FORMAT")
 	}
+	// Get ID from encoded short url
 	decoded := DecodeShortLink(request.Short, s.env.FillingChar, s.env.URLDomain, s.dict)
+	// Load original from storage
 	original, err := s.storage.Load(decoded)
 	if err != nil {
 		// url not found

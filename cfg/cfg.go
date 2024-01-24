@@ -18,6 +18,7 @@ type Env struct {
 	CheckURLs   string `mapstructure:"CHECK_URLS"`
 }
 
+// using viper to read .env file
 func ReadCFG() (*Env, error) {
 	env := Env{}
 	viper.SetConfigFile(".env")
