@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package shortener_proto;
+
+option go_package = "grpc-url-shortener/pkg;shortener";
+
+service LinkShortener {
+  rpc CreateShortLink(CreateShortLinkRequest) returns (CreateShortLinkResponse) {}
+  rpc GetOriginalLink(GetOriginalLinkRequest) returns (GetOriginalLinkResponse) {}
+}
+
+message CreateShortLinkRequest {
+  string original = 1;
+}
+
+message CreateShortLinkResponse {
+  string short = 1;
+}
+
+message GetOriginalLinkRequest {
+  string short = 1;
+}
+
+message GetOriginalLinkResponse {
+  string original = 1;
+}

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  db:
+    restart: on-failure
+    container_name: postgres_shortener
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres-db-vol:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  grpc_server:
+    restart: on-failure
+    container_name: grpc_container
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "db"
+    command: ["./main", "postgres"]
+volumes:
+  postgres-db-vol:
