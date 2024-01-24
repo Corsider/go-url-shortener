@@ -39,6 +39,10 @@ func New(storage storage.UrlStorage, env *cfg.Env) *LinkShortener {
 }
 
 func (s *LinkShortener) CreateShortLink(ctx context.Context, request *shortenerproto.CreateShortLinkRequest) (*shortenerproto.CreateShortLinkResponse, error) {
+	// if empty
+	if request.Original == "" {
+		return &shortenerproto.CreateShortLinkResponse{Short: "INVALID FORMAT"}, status.Errorf(codes.InvalidArgument, "INVALID FORMAT")
+	}
 	// if exceeds max allowed length (255)
 	if utf8.RuneCountInString(request.Original) > 255 {
 		return &shortenerproto.CreateShortLinkResponse{Short: "TOO LONG"}, status.Errorf(codes.InvalidArgument, "TOO LONG URL, 255 IS MAX LENGTH")
