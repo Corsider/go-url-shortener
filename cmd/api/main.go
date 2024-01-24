@@ -34,7 +34,7 @@ func main() {
 		shortener = shortenerserver.New(keystorage, env)
 		log.Println("Server will run with in-memory storage")
 	} else if os.Args[1] == "postgres" {
-		connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", env.DBHost, env.DBPort, env.DBUser, env.DBPass, env.DBName)
+		connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", env.DBUser, env.DBPass, env.DBHost, env.DBPort, env.DBName)
 		keystorage = postgres.New(connectionString)
 		shortener = shortenerserver.New(keystorage, env)
 		log.Println("Server will run with PostgreSQL storage")
