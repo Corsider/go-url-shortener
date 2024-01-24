@@ -80,5 +80,5 @@ https://oz.on/_____er25g
 В БД нет введенной ссылки:
 ![error_not_found](./images/error_not_found.PNG)
 
-Текст вместо ссылки (с включенным параметром `CHECK_URLS`):
+Случайный текст вместо ссылки (с включенным параметром `CHECK_URLS`):
 ![error_not_a_url](./images/error_not_a_url.PNG)
