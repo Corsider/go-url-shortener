@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 type LinkShortener struct {
@@ -38,6 +39,10 @@ func New(storage storage.UrlStorage, env *cfg.Env) *LinkShortener {
 }
 
 func (s *LinkShortener) CreateShortLink(ctx context.Context, request *shortenerproto.CreateShortLinkRequest) (*shortenerproto.CreateShortLinkResponse, error) {
+	// if exceeds max allowed length (255)
+	if utf8.RuneCountInString(request.Original) > 255 {
+		return &shortenerproto.CreateShortLinkResponse{Short: "TOO LONG"}, status.Errorf(codes.InvalidArgument, "TOO LONG URL, 255 IS MAX LENGTH")
+	}
 	// Check if this url is already in storage
 	found, id := s.storage.CheckExistence(request.Original)
 	if found {

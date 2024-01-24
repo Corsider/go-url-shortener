@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go-url-shortener/cfg"
 	shortenerproto "go-url-shortener/pkg/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"testing"
 )
 
@@ -44,6 +46,7 @@ func TestLinkShortener_CreateShortLink_default(t *testing.T) {
 		FillingChar: "_",
 		ShortLen:    "10",
 		URLDomain:   "oz.on/",
+		CheckURLs:   "0",
 	}
 	linkShortener := New(mockStorage, env)
 
@@ -60,12 +63,31 @@ func TestLinkShortener_CreateShortLink_default(t *testing.T) {
 	mockStorage.AssertCalled(t, "Save", "original.com", 1)
 }
 
+func TestLinkShortener_CreateShortLink_TooLong(t *testing.T) {
+	mockStorage := new(MockStorage)
+	env := &cfg.Env{
+		FillingChar: "_",
+		ShortLen:    "10",
+		URLDomain:   "oz.on/",
+		CheckURLs:   "0",
+	}
+	linkShortener := New(mockStorage, env)
+	// string below has 256 characters
+	tooLongString := "asdgaslkjhfskdljhfsjkldhf;lshdglkshd;lgks;dghslkdghslkdhgslkdhgs;lkhg;slkdhkshdgkhs;dkhgsdkhgsdkhg" +
+		";skdhgdskhgskhdsdl;kghsdkhgksdgsdklghskdghlskhdglskhdgksdgkhsdklghslhkdgskdgsldkhgslkdhgkhsdkghsdgskdhgshdgkshd" +
+		"ghsdhgskhgskhdgsdkhgkshgdkghghhhhhhhhdgsdggdsds"
+	response, err := linkShortener.CreateShortLink(context.Background(), &shortenerproto.CreateShortLinkRequest{Original: tooLongString})
+	assert.Equal(t, status.Errorf(codes.InvalidArgument, "TOO LONG URL, 255 IS MAX LENGTH"), err)
+	assert.Equal(t, "TOO LONG", response.Short)
+}
+
 func TestLinkShortener_CreateShortLink_duplicate(t *testing.T) {
 	mockStorage := new(MockStorage)
 	env := &cfg.Env{
 		FillingChar: "-",
 		ShortLen:    "5",
 		URLDomain:   "sho.rt/",
+		CheckURLs:   "0",
 	}
 	linkShortener := New(mockStorage, env)
 	mockStorage.On("CheckExistence", "original.com").Return(true, 1)
@@ -84,6 +106,7 @@ func TestLinkShortener_GetOriginalLink(t *testing.T) {
 		FillingChar: "-",
 		ShortLen:    "5",
 		URLDomain:   "sho.rt/",
+		CheckURLs:   "0",
 	}
 	linkshortener := New(mockStorage, env)
 	mockStorage.On("Load", 211788).Return("original.com", nil)
